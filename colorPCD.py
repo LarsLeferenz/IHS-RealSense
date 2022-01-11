@@ -4,8 +4,9 @@ from enum import IntEnum
 
 from datetime import datetime
 import open3d as o3d
+import matplotlib.pyplot as plt
 
-
+    
 class Preset(IntEnum):
     Custom = 0
     Default = 1
@@ -39,13 +40,13 @@ if __name__ == "__main__":
     depth_sensor = profile.get_device().first_depth_sensor()
 
 
-    depth_sensor.set_option(rs.option.visual_preset, Preset.HighAccuracy)
+    depth_sensor.set_option(rs.option.visual_preset, Preset.Custom)
 
 
     depth_scale = depth_sensor.get_depth_scale()
 
 
-    clipping_distance_in_meters = 6  
+    clipping_distance_in_meters = 2  
     clipping_distance = clipping_distance_in_meters / depth_scale
 
     align_to = rs.stream.color
@@ -60,7 +61,7 @@ if __name__ == "__main__":
     images = []
     
 try:
-        for _ in range(100):
+        for _ in range(10):
 
             # Get frameset of color and depth
             frames = pipeline.wait_for_frames()
@@ -95,5 +96,18 @@ try:
             images.append(temp)
             
 finally:
-    o3d.visualization.draw_geometries(images)
-    pipeline.stop()
+    pcd = o3d.geometry.PointCloud()
+    for image in images:
+        pcd += image
+    pcd = pcd.voxel_down_sample(voxel_size=0.01)
+    with o3d.utility.VerbosityContextManager(
+        o3d.utility.VerbosityLevel.Debug) as cm:
+        labels = np.array(
+            pcd.cluster_dbscan(eps=0.08, min_points=100, print_progress=True))
+
+    max_label = labels.max()
+    print(f"point cloud has {max_label + 1} clusters")
+    colors = plt.get_cmap("tab20")(labels / (max_label if max_label > 0 else 1))
+    colors[labels < 0] = 0
+    pcd.colors = o3d.utility.Vector3dVector(colors[:, :3])
+    o3d.visualization.draw_geometries([pcd])
