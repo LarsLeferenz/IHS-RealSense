@@ -99,11 +99,11 @@ finally:
     pcd = o3d.geometry.PointCloud()
     for image in images:
         pcd += image
-    pcd = pcd.voxel_down_sample(voxel_size=0.01)
+    pcd = pcd.voxel_down_sample(voxel_size=0.008)
     with o3d.utility.VerbosityContextManager(
         o3d.utility.VerbosityLevel.Debug) as cm:
         labels = np.array(
-            pcd.cluster_dbscan(eps=0.08, min_points=100, print_progress=True))
+            pcd.cluster_dbscan(eps=0.08, min_points=120, print_progress=True))
 
     max_label = labels.max()
     print(f"point cloud has {max_label + 1} clusters")
