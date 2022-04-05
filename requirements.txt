@@ -1,0 +1,5 @@
+matplotlib==3.4.2
+numpy==1.20.3
+open3d==0.14.1+bcb4b38a1
+plotly==5.5.0
+pyrealsense2==2.50.0.3812
